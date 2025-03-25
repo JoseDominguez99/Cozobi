@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 @Component({
-  selector: 'app-selection',
+  selector: 'app-info',
   imports: [],
-  templateUrl: './selection.component.html',
+  templateUrl: './info.component.html',
   styles: `
     :host {
       display: block;
@@ -11,4 +11,4 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SelectionComponent { }
+export class InfoComponent { }

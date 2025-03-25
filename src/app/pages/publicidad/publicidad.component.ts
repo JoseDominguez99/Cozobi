@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 @Component({
-  selector: 'app-dashboard-cozobi',
+  selector: 'app-publicidad',
   imports: [],
-  templateUrl: './dashboardCozobi.component.html',
+  templateUrl: './publicidad.component.html',
   styles: `
     :host {
       display: block;
@@ -11,4 +11,4 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class DashboardCozobiComponent { }
+export class PublicidadComponent { }

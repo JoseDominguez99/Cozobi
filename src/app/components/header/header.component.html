@@ -1,0 +1,29 @@
+<nav class="bg-orange-300 shadow-md sticky top-0 z-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center h-20">
+      <!-- Botón de volver/regresar -->
+      <button class="mr-4 p-2 rounded-full hover:bg-orange-200 transition-colors duration-200">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor" routerLink="selection">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+      </button>
+
+      <!-- Logo y nombre de la empresa -->
+      <div class="flex items-center">
+        <div class="ml-3">
+          <h1 class="text-4xl font-bold text-gray-900">COZOBI</h1>
+
+          <!-- Menú de navegación -->
+          <div class="flex ml-auto items-center space-x-4">
+            <a *ngFor="let item of items"
+              class="nav-link text-sm text-black hover:text-white transition-colors duration-200 hover:text-lg"
+              [routerLink]="item.path" routerLinkActive="text-indigo-600 font-medium">
+              {{item.title}}
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
