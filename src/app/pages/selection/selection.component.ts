@@ -24,7 +24,7 @@ export class SelectionComponent {
       title: 'Ingeniero agrónomo',
       content: 'ACCEDIENDO COMO INGENIERO AGRÓNOMO, PODRÁS VER LA INFORMACIÓN DE UNA FORMA MÁS TÉCNICA, ADEMÁS DE PODER DESCARGAR LOS DATOS DE TU INTERÉS EN FORMATO XLSX.',
       descButton: 'Acceder como ingeniero',
-      image: '',
+      image: 'assets/ingeVector.png',
       path: '/homeInge'
     },
   ];

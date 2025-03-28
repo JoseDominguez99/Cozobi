@@ -21,12 +21,15 @@
             ],
             "tsConfig": "tsconfig.app.json",
             "assets": [
-              "src/favicon.ico",
-              "src/assets"
+              {
+                "glob": "**/*",
+                "input": "node_modules/leaflet/dist/images/",
+                "output": "./assets"
+              }
             ],
             "styles": [
               "src/styles.css",
-              "node_modules/bootstrap/dist/css/bootstrap.min.css"
+              "./node_modules/leaflet/dist/leaflet.css"
             ],
             "scripts": [
               "node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"

@@ -1,0 +1,20 @@
+<!-- Importar los siguientes link y script es muuuuy importante para renderizar los mapas -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+
+<!-- Estos enlaces pueden ir en tu index.html en lugar de aquí -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+<div class="relative w-full h-full bg-gray-100">
+  <div id="map" class="absolute inset-0 z-0 rounded-lg overflow-hidden">
+  </div>
+  
+  <div class="absolute bottom-2 left-2 bg-white/90 p-2 rounded-md shadow-sm z-10 text-xs">
+    @if (currentCoords) {
+      <p>Latitud: {{currentCoords[0] | number:'1.4-6'}}</p>
+      <p>Longitud: {{currentCoords[1] | number:'1.4-6'}}</p>
+    }
+  </div>
+</div>

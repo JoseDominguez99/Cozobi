@@ -1,9 +1,11 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, OnDestroy, viewChild } from '@angular/core';
 import { HeaderComponent } from '../../components/header/header.component';
+import { MapaComponent } from '../../components/mapa/mapa.component';
+
 
 @Component({
   selector: 'app-home-inge',
-  imports: [HeaderComponent],
+  imports: [HeaderComponent, MapaComponent],
   templateUrl: './homeInge.component.html',
   styles: `
     :host {
@@ -12,4 +14,11 @@ import { HeaderComponent } from '../../components/header/header.component';
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class HomeIngeComponent { }
+export class HomeIngeComponent implements OnInit{ 
+
+  ngOnInit(): void {
+    
+  }
+
+
+}
