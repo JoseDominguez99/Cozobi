@@ -1,11 +1,13 @@
-import { ChangeDetectionStrategy, Component, OnInit, OnDestroy, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, OnDestroy, viewChild, ViewChild } from '@angular/core';
 import { HeaderComponent } from '../../components/header/header.component';
 import { MapaComponent } from '../../components/mapa/mapa.component';
+import { FormsModule } from '@angular/forms'; // Importa FormsModule
+import { CommonModule } from '@angular/common';
 
 
 @Component({
   selector: 'app-home-inge',
-  imports: [HeaderComponent, MapaComponent],
+  imports: [HeaderComponent, MapaComponent, FormsModule, CommonModule],
   templateUrl: './homeInge.component.html',
   styles: `
     :host {
@@ -14,11 +16,17 @@ import { MapaComponent } from '../../components/mapa/mapa.component';
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class HomeIngeComponent implements OnInit{ 
+export class HomeIngeComponent{ 
+@ViewChild(MapaComponent) mapa!: MapaComponent;
+searchQuery: string = '';
 
-  ngOnInit(): void {
-    
-  }
+onSearch(){
+  if(!this.searchQuery.trim()) return;
+  this.mapa.searchPlace(this.searchQuery);
+}
 
-
+clearSearch(){
+  this.searchQuery = '';
+  this.mapa.clearSearch();
+}
 }

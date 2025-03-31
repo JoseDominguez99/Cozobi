@@ -22,6 +22,7 @@
     "@arcgis/map-components": "^4.32.13",
     "@tailwindcss/postcss": "^4.0.16",
     "bootstrap": "^5.3.3",
+    "firebase": "^11.5.0",
     "leaflet": "^1.9.4",
     "leaflet-routing-machine": "^3.2.12",
     "leaflet.markercluster": "^1.5.3",

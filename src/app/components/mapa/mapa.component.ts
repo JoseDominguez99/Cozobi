@@ -3,13 +3,12 @@ import * as L from 'leaflet';
 import 'leaflet-routing-machine';
 import { ViewEncapsulation } from '@angular/core';
 import { LocationService } from '../../services/location.service';
-export const DEFAULT_LAT = 17.06542;
-export const DEFAULT_LON =  -96.72365;
 import { DecimalPipe } from '@angular/common';
 
 
-const iconRetinaUrl = '';
-const shadowUrl = '';
+export const DEFAULT_LAT = 17.06542;
+export const DEFAULT_LON =  -96.72365;
+
 type Coordinates = [number, number];
 
 
@@ -54,6 +53,10 @@ export class MapaComponent implements OnInit {
   
 
   currentCoords: Coordinates | null = null;
+  private markers: L.Marker[] = [];
+  private searchMarkers: L.Marker | null = null;
+  isLoading: boolean = false;
+  searchError: string | null = null;
   private locationService = inject(LocationService);
   constructor() {}
 
@@ -70,8 +73,6 @@ export class MapaComponent implements OnInit {
       this.initMap();
     }catch(e){
       console.warn('No se pudo usar la ubicación precisa, usando ubicación por defecto', e);
-      
-
       // Intentar obtener ubicación aproximada por IP como fallback
       try {
         const approxLocation = await this.locationService.getApproximateLocation();
@@ -101,7 +102,6 @@ export class MapaComponent implements OnInit {
     const tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
       maxZoom: 20,
       minZoom: 2,
-
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright"></a> contributors'
     }).addTo(this.map);
     // Hasta aquí podemos tener un mapa correctamente cargado y funcional, desde aquí, son funciones para agregar funciones al mapa
@@ -123,5 +123,67 @@ export class MapaComponent implements OnInit {
       .addTo(this.map)
       .bindPopup('Estás aquí')
       .openPopup();
+  }
+
+  private moveTo(lat: number, lon: number, zoom: number){
+    this.map.setView([lat, lon, zoom]);
+    this.addSearchMark(lat, lon);
+  }
+
+  public async searchPlace(query: string): Promise<void> {
+    this.isLoading = true;
+    this.searchError = null;
+
+    try{
+      const coordPattern = /^-?\d+\.?\d*,\s*-?\d+\.?\d*$/;
+      if(coordPattern.test(query)){
+        const [lat, lon] = query.split(',').map(parseFloat);
+        this.moveTo(lat, lon, 15);
+        return;
+      }
+    
+
+      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${
+        encodeURIComponent(query)}`);
+      const data = await response.json();
+
+      if(data?.length > 0){
+        const firstResult = data[0];
+        this.moveTo(parseFloat(firstResult.lat), parseFloat(firstResult.lon), 15);
+
+        if(this.searchMarkers){
+          this.searchMarkers.bindPopup(
+            `
+          <b>${firstResult.display_name || 'Ubicación'}</b><br>
+          <small>Tipo: ${firstResult.type || 'desconocido'}</small>
+        `).openPopup();
+        }
+      }else{
+        this.searchError = 'No se encontró resultados para la búsqueda';
+      }
+    }catch(err){
+      this.searchError = 'Error de búsqueda';
+    } finally{
+      this.isLoading = false;
+    }
+  }
+
+  private addSearchMark(lat: number, lon: number): void {
+    if(this.searchMarkers) this.map.removeLayer(this.searchMarkers);
+
+    const searchIcon = L.icon({
+      iconUrl: 'assets/marker-icon-2x.png',
+      shadowUrl: 'assets/marker-shadow.png',
+      iconSize: [25, 41],
+    });
+
+    this.searchMarkers = L.marker([lat, lon], { icon: searchIcon })
+    .addTo(this.map)
+    .bindPopup('Ubicación de búsqueda')
+  }
+
+  public clearSearch(): void {
+    if(this.searchMarkers) this.map.removeLayer(this.searchMarkers);
+    this.searchError = null;
   }
 }
