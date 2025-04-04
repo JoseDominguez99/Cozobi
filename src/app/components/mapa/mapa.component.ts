@@ -1,9 +1,10 @@
-import { Component, importProvidersFrom, inject, Input, OnInit} from '@angular/core';
+import { Component, inject, Input, OnInit, ViewChild, signal, ChangeDetectionStrategy} from '@angular/core';
 import * as L from 'leaflet';
 import 'leaflet-routing-machine';
 import { ViewEncapsulation } from '@angular/core';
 import { LocationService } from '../../services/location.service';
 import { DecimalPipe } from '@angular/common';
+import { SearchService } from '../../services/search.service';
 
 
 export const DEFAULT_LAT = 17.06542;
@@ -16,6 +17,8 @@ type Coordinates = [number, number];
   selector: 'app-mapa',
   imports: [DecimalPipe],
   templateUrl: './mapa.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
   styles: `
     :host {
       display: block;
@@ -46,6 +49,10 @@ type Coordinates = [number, number];
   encapsulation: ViewEncapsulation.None,
 })
 export class MapaComponent implements OnInit {
+  private searchService = inject(SearchService);
+  searchResults = signal<any[]>([]);
+  selectedResult = signal<any>(null);
+
   // Iniciar código para crear un mapa de openStreetMap
   private map: any;
   @Input() lat: number = DEFAULT_LAT;
@@ -55,9 +62,11 @@ export class MapaComponent implements OnInit {
   currentCoords: Coordinates | null = null;
   private markers: L.Marker[] = [];
   private searchMarkers: L.Marker | null = null;
-  isLoading: boolean = false;
+  isLoading = signal(false);
   searchError: string | null = null;
   private locationService = inject(LocationService);
+  currentPage = signal(1);
+  resultsPerPage = 10;
   constructor() {}
 
   ngOnInit(): void {
@@ -130,42 +139,62 @@ export class MapaComponent implements OnInit {
     this.addSearchMark(lat, lon);
   }
 
-  public async searchPlace(query: string): Promise<void> {
-    this.isLoading = true;
+  public async searchPlace(query: string, loadMore: boolean = false): Promise<void> {
+    if (!loadMore) {
+      this.currentPage.set(1);
+      this.searchResults.set([]);
+    } else {
+      this.currentPage.update(p => p + 1);
+    }
+    this.isLoading.set(true);
     this.searchError = null;
+    this.searchResults.set([]);
+    this.selectedResult.set(null);
 
     try{
       const coordPattern = /^-?\d+\.?\d*,\s*-?\d+\.?\d*$/;
       if(coordPattern.test(query)){
         const [lat, lon] = query.split(',').map(parseFloat);
         this.moveTo(lat, lon, 15);
+
+        this.searchResults.set([
+          {
+          lat: lat.toString(),
+          lon: lon.toString(),
+          display_name: `Coordenadas: ${lat}, ${lon}`,
+          type: 'coordinates'
+          }
+        ]);
         return;
       }
     
 
       const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${
-        encodeURIComponent(query)}`);
+        encodeURIComponent(query)}&limit=10`);
       const data = await response.json();
 
-      if(data?.length > 0){
-        const firstResult = data[0];
-        this.moveTo(parseFloat(firstResult.lat), parseFloat(firstResult.lon), 15);
-
-        if(this.searchMarkers){
-          this.searchMarkers.bindPopup(
-            `
-          <b>${firstResult.display_name || 'Ubicación'}</b><br>
-          <small>Tipo: ${firstResult.type || 'desconocido'}</small>
-        `).openPopup();
+      if (data?.length > 0) {
+        if (loadMore) {
+          this.searchResults.update(results => [...results, ...data]);
+        } else {
+          this.searchResults.set(data);
         }
-      }else{
-        this.searchError = 'No se encontró resultados para la búsqueda';
+        if (!loadMore) {
+          this.selectResult(data[0]);
+        }
+      } else {
+        this.searchError = 'No se encontraron más resultados';
       }
+
     }catch(err){
       this.searchError = 'Error de búsqueda';
     } finally{
-      this.isLoading = false;
+      this.isLoading.set(false);
     }
+  }
+
+  public canLoadMore(): boolean {
+    return this.searchResults().length >= this.currentPage() * this.resultsPerPage;
   }
 
   private addSearchMark(lat: number, lon: number): void {
@@ -181,9 +210,26 @@ export class MapaComponent implements OnInit {
     .addTo(this.map)
     .bindPopup('Ubicación de búsqueda')
   }
+  
+  public selectResult(result: any): void {
+    this.selectedResult.set(result);
+    const lat = parseFloat(result.lat);
+    const lon = parseFloat(result.lon);
+    this.moveTo(lat, lon, 15);
+    
+    // Actualiza el marcador de búsqueda
+    if (this.searchMarkers) {
+      this.searchMarkers.bindPopup(
+        `<b>${result.display_name || 'Ubicación'}</b><br>
+         <small>Tipo: ${result.type || 'desconocido'}</small>`
+      ).openPopup();
+    }
+  }
 
   public clearSearch(): void {
-    if(this.searchMarkers) this.map.removeLayer(this.searchMarkers);
-    this.searchError = null;
-  }
+  if (this.searchMarkers) this.map.removeLayer(this.searchMarkers);
+  this.searchError = null;
+  this.searchResults.set([]);
+  this.selectedResult.set(null);
+}
 }

@@ -1,0 +1,94 @@
+<!-- plantas.component.html -->
+<app-header></app-header>
+<div class="container mx-auto px-4 py-8">
+  @if (plantas$ | async; as plantas) {
+    <h1 class="text-3xl font-bold text-black mb-8 text-center">Catálogo de Plantas</h1>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      @for (planta of plantas; track planta.id) {
+        <div class="relative bg-white rounded-lg shadow-md overflow-hidden border border-orange-100 
+        hover:shadow-xl transition-all duration-300 h-[100%] flex flex-col">
+          <!-- Header con nombre -->
+          <div class="bg-orange-300 px-4 py-3">
+            <h2 class="text-2xl font-semibold text-white truncate">
+              {{ planta.Nombre_comun || 'Nombre no disponible' }}
+            </h2>
+          </div>
+          
+          <!-- Imagen proporcional -->
+          <div class="w-full aspect-square overflow-hidden">
+            <img 
+              class="w-full h-full object-cover transition-transform duration-500 hover:scale-105" 
+              [src]="planta.image || 'assets/plant-placeholder.jpg'" 
+              [alt]="planta.Nombre_comun"
+              onerror="this.src='assets/plant-placeholder.jpg'"
+            >
+          </div>
+          
+          <!-- Contenido visible siempre -->
+          <div class="p-4 flex-grow">
+            <h3 class="text-lg font-medium text-amber-950 truncate">
+              {{ planta.Nombre_cientifico || 'Nombre no disponible' }}
+            </h3>
+          </div>
+          
+          <!-- Detalles hover -->
+          <div class="absolute inset-0 bg-orange-600 bg-opacity-90 text-white p-4 opacity-0 hover:opacity-100 transition-opacity duration-300 flex flex-col justify-center overflow-auto">
+            <!-- Condiciones ambientales -->
+            <div class="mb-6">
+              <h3 class="text-xl font-bold text-white mb-3 border-b border-orange-200 pb-1">Condiciones Ambientales</h3>
+              <div class="space-y-2">
+                <div class="flex justify-between">
+                  <span>Temperatura:</span>
+                  <span class="font-medium">
+                    {{ planta.Temperatura_Min || 'N/A' }}°C - {{ planta.Temperatura_Max || 'N/A' }}°C
+                  </span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Óptima:</span>
+                  <span class="font-medium">{{ planta.Temperatura_Optima || 'N/A' }}°C</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Precipitación:</span>
+                  <span class="font-medium">{{ planta['Precipitación'] || planta.Precipitacion || 'N/A' }} mm</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Luz requerida:</span>
+                  <span class="font-medium">{{ planta.Luz || 'N/A' }}</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Condiciones de suelo -->
+            <div class="mb-4">
+              <h3 class="text-xl font-bold text-white mb-3 border-b border-orange-200 pb-1">Condiciones de Suelo</h3>
+              <div class="space-y-2">
+                <div class="flex justify-between">
+                  <span>pH:</span>
+                  <span class="font-medium">{{ planta.Ph || planta.pH || 'N/A' }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Salinidad:</span>
+                  <span class="font-medium">{{ planta.Salinidad || 'N/A' }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Textura:</span>
+                  <span class="font-medium">{{ planta.Textura || planta.textura || 'N/A' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      } @empty {
+        <div class="col-span-full text-center py-12">
+          <p class="text-gray-500 text-lg">No se encontraron plantas registradas</p>
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="text-center py-12">
+      <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-600"></div>
+      <p class="mt-2 text-gray-600">Cargando plantas...</p>
+    </div>
+  }
+</div>

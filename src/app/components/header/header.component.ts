@@ -26,6 +26,10 @@ export class HeaderComponent {
     {
       title: 'Publicidad',
       path: '/publicidad'
+    },
+    {
+      title: 'Todas las plantas',
+      path: '/plantas'
     }
   ];
 }

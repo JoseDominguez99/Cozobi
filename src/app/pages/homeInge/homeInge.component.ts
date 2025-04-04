@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, OnInit, OnDestroy, viewChild, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, OnDestroy, viewChild, ViewChild, computed } from '@angular/core';
 import { HeaderComponent } from '../../components/header/header.component';
 import { MapaComponent } from '../../components/mapa/mapa.component';
 import { FormsModule } from '@angular/forms'; // Importa FormsModule
 import { CommonModule } from '@angular/common';
+
 
 
 @Component({
@@ -13,20 +14,73 @@ import { CommonModule } from '@angular/common';
     :host {
       display: block;
     }
+    .search-result-item {
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    border-radius: 0.375rem;
+    border: 1px solid #e5e7eb;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .search-result-item:hover {
+    background-color: #f9fafb;
+    border-color: #d1d5db;
+    transform: translateY(-1px);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  .search-result-item h3 {
+    margin-bottom: 0.25rem;
+    font-weight: 500;
+    color: #111827;
+  }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class HomeIngeComponent{ 
-@ViewChild(MapaComponent) mapa!: MapaComponent;
-searchQuery: string = '';
+export class HomeIngeComponent { 
+  @ViewChild(MapaComponent) mapa!: MapaComponent;
+  searchQuery: string = '';
 
-onSearch(){
-  if(!this.searchQuery.trim()) return;
-  this.mapa.searchPlace(this.searchQuery);
-}
+  loadMoreResults() {
+    if (this.mapa?.canLoadMore()) {
+      this.mapa.searchPlace(this.searchQuery, true);
+    }
+  }
 
-clearSearch(){
-  this.searchQuery = '';
-  this.mapa.clearSearch();
-}
+  get showLoadMore() {
+    return this.mapa?.canLoadMore() && !this.isLoading && this.searchResults.length > 0;
+  }
+
+  // Modifica el getter para manejar el caso undefined
+  get searchResults() {
+    return this.mapa?.searchResults() || [];
+  }
+
+  // Añade un computed para el estado de carga
+  get isLoading() {
+    return this.mapa?.isLoading() || false;
+  }
+
+  // Añade un computed para el error
+  get searchError() {
+    return this.mapa?.searchError || null;
+  }
+
+  onSearch() {
+    if (this.searchQuery.trim() && this.mapa) {
+      this.mapa.searchPlace(this.searchQuery);
+    }
+  }
+
+  onSelectResult(result: any) {
+    if (this.mapa) {
+      this.mapa.selectResult(result);
+    }
+  }
+
+  clearSearch() {
+    this.searchQuery = '';
+    if (this.mapa) {
+      this.mapa.clearSearch();
+    }
+  }
 }
