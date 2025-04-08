@@ -41,4 +41,37 @@
     <div class="bg-white shadow-lg rounded-xl p-4 m-2 w-full md:w-[80%] max-w-[900px] h-[400px]">
     </div>
   </div> 
+
+  <!-- Datos de la Ubicación -->
+  <div class="flex justify-center items-center">
+    <div class="bg-white shadow-lg rounded-xl p-4 m-2 w-full md:w-[80%] max-w-[900px]">
+      <div class='bg-gray-100 p-4 rounded-lg shadow-md'>
+        <h3 class='text-lg font-semibold mb-3'>Datos de ubicación</h3>
+        <p class='font-medium'>📍 {{ ubicacion.nombre }}</p>
+        <p class='text-gray-600 text-sm'>Tipo de suelo: {{ ubicacion.suelo }}</p>
+        <div class='mt-2'>
+          <p class='text-sm'>☀️ {{ ubicacion.temperatura }}°C</p>
+          <p class='text-sm'>💧 {{ ubicacion.humedad }}%</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cultivos -->
+  <div class="flex justify-center items-center">
+    <div class="bg-white shadow-lg rounded-xl p-4 m-2 w-full md:w-[80%] max-w-[900px]">
+      <div class='bg-gray-100 p-4 rounded-lg shadow-md'>
+        <h3 class='text-lg font-semibold mb-3'>Posibles cultivos</h3>
+        <div *ngFor='let cultivo of cultivos' class='bg-white p-2 rounded-lg flex items-center justify-between shadow-sm mb-2'>
+          <div>
+            <p class='font-medium'>🌱 {{ cultivo.nombre }}</p>
+            <p class='text-gray-600 text-sm'>{{ cultivo.familia }}</p>
+          </div>
+          <button class='text-gray-500 hover:text-gray-700'> &gt;</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
 </div>
