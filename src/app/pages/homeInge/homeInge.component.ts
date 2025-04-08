@@ -1,10 +1,10 @@
-import { ChangeDetectionStrategy, Component, OnInit, OnDestroy, viewChild, ViewChild, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ViewChild, inject } from '@angular/core';
 import { HeaderComponent } from '../../components/header/header.component';
 import { MapaComponent } from '../../components/mapa/mapa.component';
 import { FormsModule } from '@angular/forms'; // Importa FormsModule
 import { CommonModule } from '@angular/common';
-
-
+import { Observable } from 'rxjs';
+import { Firestore, collection, collectionData } from '@angular/fire/firestore';
 
 @Component({
   selector: 'app-home-inge',
@@ -39,6 +39,16 @@ import { CommonModule } from '@angular/common';
 export class HomeIngeComponent { 
   @ViewChild(MapaComponent) mapa!: MapaComponent;
   searchQuery: string = '';
+  private firestore: Firestore = inject(Firestore);
+
+  ubicaciones: Observable<any[]>; 
+
+  constructor() {
+    const ubicacionesCollection = collection(this.firestore, 'pueblos');
+    this.ubicaciones = collectionData(ubicacionesCollection, { idField: 'Name' });
+    const plantasCollection = collection(this.firestore, 'plantas');
+    const plantas = collectionData(plantasCollection, { idField: 'id' });
+  }
 
   loadMoreResults() {
     if (this.mapa?.canLoadMore()) {
@@ -50,17 +60,14 @@ export class HomeIngeComponent {
     return this.mapa?.canLoadMore() && !this.isLoading && this.searchResults.length > 0;
   }
 
-  // Modifica el getter para manejar el caso undefined
   get searchResults() {
     return this.mapa?.searchResults() || [];
   }
 
-  // Añade un computed para el estado de carga
   get isLoading() {
     return this.mapa?.isLoading() || false;
   }
 
-  // Añade un computed para el error
   get searchError() {
     return this.mapa?.searchError || null;
   }
@@ -68,7 +75,7 @@ export class HomeIngeComponent {
   onSearch() {
     if (this.searchQuery.trim() && this.mapa) {
       this.mapa.searchPlace(this.searchQuery);
-    }
+    }   
   }
 
   onSelectResult(result: any) {

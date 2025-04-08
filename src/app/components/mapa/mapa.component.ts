@@ -79,6 +79,7 @@ export class MapaComponent implements OnInit {
       this.lat = position.coords.latitude;
       this.lon = position.coords.longitude;
       this.currentCoords = [this.lat, this.lon];
+      console.log('Ubicación: ', this.currentCoords);
       this.initMap();
     }catch(e){
       console.warn('No se pudo usar la ubicación precisa, usando ubicación por defecto', e);
@@ -88,15 +89,21 @@ export class MapaComponent implements OnInit {
         this.lat = approxLocation.lat;
         this.lon = approxLocation.lon;
         this.currentCoords = [this.lat, this.lon];
+        console.log('Ubicación aproximada', approxLocation);
+        
       } catch {
         console.warn('No se pudo obtener ubicación aproximada, usando valores por defecto');
+        this.currentCoords = [DEFAULT_LAT, DEFAULT_LON];
       }
       
       this.initMap();
     }
   }
 
+  
+
   private initMap(): void {
+    
     this.map = L.map('map', {
       center: [this.lat, this.lon],
       attributionControl: false,
@@ -113,6 +120,7 @@ export class MapaComponent implements OnInit {
       minZoom: 2,
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright"></a> contributors'
     }).addTo(this.map);
+    
     // Hasta aquí podemos tener un mapa correctamente cargado y funcional, desde aquí, son funciones para agregar funciones al mapa
     this.addUserMarker();
   }
@@ -156,7 +164,6 @@ export class MapaComponent implements OnInit {
       if(coordPattern.test(query)){
         const [lat, lon] = query.split(',').map(parseFloat);
         this.moveTo(lat, lon, 15);
-
         this.searchResults.set([
           {
           lat: lat.toString(),
@@ -174,23 +181,53 @@ export class MapaComponent implements OnInit {
       const data = await response.json();
 
       if (data?.length > 0) {
+        if(this.currentCoords){
+          data.sort((a:any, b:any) =>{
+            const distanceA = this.calculateDistance(
+              this.currentCoords![0], this.currentCoords![1],
+              parseFloat(a.lat), parseFloat(a.lon)
+            );
+            const distanceB = this.calculateDistance(
+              this.currentCoords![0], this.currentCoords![1],
+              parseFloat(b.lat), parseFloat(b.lon)
+            );
+            return distanceA - distanceB;
+          });
+        }
+
         if (loadMore) {
           this.searchResults.update(results => [...results, ...data]);
         } else {
           this.searchResults.set(data);
         }
+
         if (!loadMore) {
           this.selectResult(data[0]);
         }
-      } else {
-        this.searchError = 'No se encontraron más resultados';
-      }
+      }else{
 
+      }
     }catch(err){
       this.searchError = 'Error de búsqueda';
     } finally{
       this.isLoading.set(false);
     }
+  }
+
+  // Calcula la distancia entre dos puntos en kilómetros usando la fórmula Haversine
+  private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number){
+    const R = 6371;
+    const dLat = this.deg2rad(lat2 - lat1);
+    const dLon = this.deg2rad(lon2 - lon1);
+    const a = 
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(this.deg2rad(lat1)) * 
+    Math.cos(this.deg2rad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R *c;
+  }
+
+  private deg2rad(deg: number){
+    return deg * (Math.PI / 180);
   }
 
   public canLoadMore(): boolean {
