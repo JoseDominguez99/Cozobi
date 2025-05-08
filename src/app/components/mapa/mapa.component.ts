@@ -5,6 +5,9 @@ import { ViewEncapsulation } from '@angular/core';
 import { LocationService } from '../../services/location.service';
 import { DecimalPipe } from '@angular/common';
 import { SearchService } from '../../services/search.service';
+import { Firestore, collection, collectionData, query, where, orderBy, limit } from '@angular/fire/firestore';
+import { Observable } from 'rxjs';
+
 
 
 export const DEFAULT_LAT = 17.06542;
@@ -52,6 +55,8 @@ export class MapaComponent implements OnInit {
   private searchService = inject(SearchService);
   searchResults = signal<any[]>([]);
   selectedResult = signal<any>(null);
+  private firestore: Firestore = inject(Firestore);
+
 
   // Iniciar código para crear un mapa de openStreetMap
   private map: any;
@@ -67,42 +72,77 @@ export class MapaComponent implements OnInit {
   private locationService = inject(LocationService);
   currentPage = signal(1);
   resultsPerPage = 10;
-  constructor() {}
+  constructor() {
+    
+
+  }
 
   ngOnInit(): void {
     this.getUserLocation();
   }
 
-  private async getUserLocation(): Promise<void>{
-    try{
+  private async getUserLocation(): Promise<void> {
+    try {
+      console.log('Intentando obtener ubicación precisa');
       const position = await this.locationService.getCurrentPosition();
+
+      console.log('Precisión obtenida:', position.coords.accuracy, 'metros');
+      console.log('Coordenadas: ', position.coords.latitude, position.coords.longitude, position.coords.altitude);
+
       this.lat = position.coords.latitude;
       this.lon = position.coords.longitude;
       this.currentCoords = [this.lat, this.lon];
-      console.log('Ubicación: ', this.currentCoords);
-      this.initMap();
-    }catch(e){
-      console.warn('No se pudo usar la ubicación precisa, usando ubicación por defecto', e);
-      // Intentar obtener ubicación aproximada por IP como fallback
-      try {
-        const approxLocation = await this.locationService.getApproximateLocation();
-        this.lat = approxLocation.lat;
-        this.lon = approxLocation.lon;
-        this.currentCoords = [this.lat, this.lon];
-        console.log('Ubicación aproximada', approxLocation);
-        
-      } catch {
-        console.warn('No se pudo obtener ubicación aproximada, usando valores por defecto');
-        this.currentCoords = [DEFAULT_LAT, DEFAULT_LON];
+      this.initMap(position.coords.accuracy);
+    } catch(e: any) {
+      console.warn('Error al obtener ubicación precisa:', e);
+      
+      // Mostrar el error al usuario si es relevante
+      if (e.code === 1) { // PERMISSION_DENIED
+        this.showPermissionWarning();
       }
+      
+      // Intentar obtener ubicación aproximada por IP
+      this.getFallbackLocation();
       
       this.initMap();
     }
   }
 
+  private async  getFallbackLocation(): Promise<void> {
+    try {
+      console.log('Obteniendo ubicación aproximada');
+      const aproxLocation = await this.locationService.getApproximateLocation();
+
+      console.log('Ubicación aproximada: ', aproxLocation);
+      this.lat = aproxLocation.lat;
+      this.lon = aproxLocation.lon;
+      this.currentCoords = [this.lat, this.lon];
+
+    } catch (ipError){
+      console.warn('Error al obtener ubicación aproximada');
+      this.currentCoords = [DEFAULT_LAT, DEFAULT_LON];
+      
+    }
+  }
+
+  private showPermissionWarning(): void{
+    const warningElemt = document.createElement('div');
+    warningElemt.className = 'geolocation-Warnings';
+    
+    warningElemt.innerHTML = `<p>Activa los permisos de ubcación para brindarte el servicio completo, por favor</p>
+    <button id="retry">Intentar de nuevo</button>`;
+
+    document.body.appendChild(warningElemt);
+
+    document.getElementById('retry')?.addEventListener('click', () =>{
+      this.getUserLocation();
+      warningElemt.remove();
+    })
+  }
+
   
 
-  private initMap(): void {
+  private initMap(accuracy?: number): void {
     
     this.map = L.map('map', {
       center: [this.lat, this.lon],
@@ -122,11 +162,11 @@ export class MapaComponent implements OnInit {
     }).addTo(this.map);
     
     // Hasta aquí podemos tener un mapa correctamente cargado y funcional, desde aquí, son funciones para agregar funciones al mapa
-    this.addUserMarker();
+    this.addUserMarker(accuracy);
   }
 
   // Agregar un marcador a la ubicación del usuario
-  private addUserMarker(): void {
+  private addUserMarker(accuracy?: number): void {
     const userIcon = L.icon({
       iconUrl: 'assets/marker-icon-2x.png', // Asegúrate de tener este archivo
       shadowUrl: 'assets/marker-shadow.png',
@@ -249,10 +289,19 @@ export class MapaComponent implements OnInit {
   }
   
   public selectResult(result: any): void {
-    this.selectedResult.set(result);
+    const pueblosRef = collection(this.firestore, 'pueblos');
+    this.selectedResult.set(result);    
+    const locationName = result.name;
+    
     const lat = parseFloat(result.lat);
     const lon = parseFloat(result.lon);
     this.moveTo(lat, lon, 15);
+    
+    const q = query(
+      pueblosRef, 
+      where('Nombre', '==', locationName),
+    )
+    
     
     // Actualiza el marcador de búsqueda
     if (this.searchMarkers) {
@@ -268,5 +317,5 @@ export class MapaComponent implements OnInit {
   this.searchError = null;
   this.searchResults.set([]);
   this.selectedResult.set(null);
-}
+  }
 }
